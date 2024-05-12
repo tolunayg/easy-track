@@ -1,0 +1,19 @@
+.form-container {
+    background-color: #333; /* Dark background color */
+    padding: 20px;
+    border-radius: 8px;
+  }
+  
+  .form-label {
+    color: #fff !important; /* White text color for labels */
+  }
+  
+  .form-input {
+    background-color: #555; /* Lighter gray background color for input fields */
+    color: #fff !important;  /* White text color for input fields */
+  }
+  
+  .form-button {
+    margin-top: 20px;
+  }
+  
