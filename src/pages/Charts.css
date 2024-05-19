@@ -1,0 +1,25 @@
+/* Charts.css */
+
+
+.charts-class .MuiInputLabel-root {
+    color: white !important;
+}
+
+/* Set text color to white for Autocomplete input */
+.charts-class .MuiAutocomplete-inputRoot input {
+    color: white !important;
+}
+
+/* Set border color to white for Autocomplete input */
+.charts-class .MuiAutocomplete-inputRoot fieldset {
+    border-color: white !important;
+}
+
+.charts-class .MuiAutocomplete-popupIndicator svg {
+    fill: white !important;
+}
+
+/* Set color to white for the SVG icon inside the button */
+.charts-class .MuiAutocomplete-clearIndicator svg {
+    fill: white !important;
+}

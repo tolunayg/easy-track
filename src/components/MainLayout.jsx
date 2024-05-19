@@ -117,6 +117,12 @@ const MainLayout = ({ component: Component }) => {
             </ListItemIcon>
             <ListItemText primary="Assets" />
           </ListItem>
+          <ListItem button component={Link} to="/charts">
+            <ListItemIcon>
+              <AccountBalanceIcon style={{ color: 'white' }} />
+            </ListItemIcon>
+            <ListItemText primary="Charts" />
+          </ListItem>
           <hr style={{ borderColor: 'grey' }} />
           <ListItem button component={Link} to="/about">
             <ListItemIcon>

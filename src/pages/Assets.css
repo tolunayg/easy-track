@@ -25,4 +25,12 @@
 }
 
 
+/* Set color to white for both text and SVG icons inside the div */
+.assets-page .MuiTablePagination-root {
+  color: white !important;
+}
 
+/* Set color to white for the SVG icons inside the div */
+.assets-page .MuiTablePagination-root svg {
+  fill: white !important;
+}

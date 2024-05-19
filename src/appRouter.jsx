@@ -10,6 +10,7 @@ import Signup from './pages/Signup';
 import Signin from './pages/Signin';
 import ManageAssets from './pages/ManageAssets';
 import Assets from './pages/Assets';
+import Charts from './pages/Charts';
 
 const AppRouter = () => {
 
@@ -36,7 +37,8 @@ const AppRouter = () => {
                 
                 <Route path="/about" element={ <MainLayout component={About} />} />
                 <Route path="/manage_assets" element={ <MainLayout component={ManageAssets} />} />
-                <Route path="/assets" element={ <MainLayout component={Assets} />} />
+                <Route path="/assets" element={ <MainLayout component={() => <Assets token={token} />} />} />
+                <Route path="/charts" element={ <MainLayout component={Charts} />} />
 
                 <Route path="/signup" element={ <Signup /> } />
                 <Route path="/signin" element={ <Signin setToken={setToken} /> } />
