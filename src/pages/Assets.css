@@ -1,37 +1,37 @@
 .custom-data-grid .MuiDataGrid-cell {
-    color: white;
+  color: white;
 }
 
 /* Override DataGrid styles */
 .custom-data-grid .MuiDataGrid-root {
-  --DataGrid-containerBackground: transparent; /* Set container background to transparent */
+--DataGrid-containerBackground: transparent; /* Set container background to transparent */
 }
 
 .custom-data-grid .MuiDataGrid-colCell {
-  background-color: transparent !important; /* Set header background to transparent */
+background-color: transparent !important; /* Set header background to transparent */
 }
 
 .custom-data-grid .MuiDataGrid-cell {
-  border: none !important; /* Remove borders from cells */
+border: none !important; /* Remove borders from cells */
 }
 
 .custom-data-grid .MuiDataGrid-colCellTitle {
-  color: lightgray !important; /* Set header text color to light gray */
+color: lightgray !important; /* Set header text color to light gray */
 }
 
 /* Remove row border */
 .custom-data-grid .MuiDataGrid-row {
-  border-bottom: none !important;
+border-bottom: none !important;
 }
 
 
 /* Set color to white for both text and SVG icons inside the div */
 .assets-page .MuiTablePagination-root {
-  color: white !important;
+color: white !important;
 }
 
 /* Set color to white for the SVG icons inside the div */
 .assets-page .MuiTablePagination-root svg {
-  fill: white !important;
+fill: white !important;
 }
 
