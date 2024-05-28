@@ -83,40 +83,44 @@ const Home = ({ token }) => {
     useEffect(() => {
         const fetchYesterdayAssetValues = async () => {
             try {
-                // Get the start and end timestamps for yesterday
-                const startOfYesterday = new Date();
-                startOfYesterday.setDate(startOfYesterday.getDate() - 1);
-                startOfYesterday.setHours(0, 0, 0, 0); // Set time to midnight
-    
-                const endOfYesterday = new Date();
-                endOfYesterday.setDate(endOfYesterday.getDate() - 1);
-                endOfYesterday.setHours(23, 59, 59, 999); // Set time to end of day
-    
+                // Get the current date and time in UTC format
+                const currentDate = new Date();
+                const currentYear = currentDate.getUTCFullYear();
+                const currentMonth = currentDate.getUTCMonth();
+                const currentDay = currentDate.getUTCDate();
+        
+                // Get the start and end timestamps for yesterday in UTC format
+                const startOfYesterday = new Date(Date.UTC(currentYear, currentMonth, currentDay - 1, 0, 0, 0));
+                const endOfYesterday = new Date(Date.UTC(currentYear, currentMonth, currentDay - 1, 23, 59, 59, 999));
+        
                 console.log('Query:', startOfYesterday.toISOString(), endOfYesterday.toISOString());
                 console.log('Today:', new Date().toISOString());
-    
+        
                 const { data, error } = await supabase
                     .from('user_asset_value')
                     .select('asset_name, asset_quantity_value')
                     .eq('user_id', token.user.id)
                     .gte('created_at', startOfYesterday.toISOString())
                     .lte('created_at', endOfYesterday.toISOString());
-    
+        
                 console.log('data', data);
-    
+        
                 if (error) {
                     throw error;
                 }
-    
+        
                 console.log('Yesterday asset values:', data);
-    
+        
                 // Calculate total value for yesterday's assets
                 let yesterdayTotal = 0;
                 data.forEach(asset => {
                     yesterdayTotal += asset.asset_quantity_value;
                 });
-    
+        
                 // Calculate today's PNL based on yesterday's total and today's total balance
+                console.log('totalBalance', totalBalance);
+                console.log('yesterdayTotal', yesterdayTotal);
+        
                 const todaysPNL = totalBalance - yesterdayTotal;
                 setTodaysPNL(todaysPNL.toFixed(2));
             } catch (error) {
@@ -159,7 +163,7 @@ const Home = ({ token }) => {
                         <Typography variant="h6" component="h2" style={{ textAlign: 'left', display: 'flex', alignItems: 'center', color: todaysPNL >= 0 ? '#00cc00' : '#ff6666' }}>
                             {isVisible && (
                                 <>
-                                    {todaysPNL >= 0 ? '+' : ''}
+                                    {todaysPNL >= 0 ? '+' : '-'}
                                     ${Math.abs(todaysPNL).toFixed(2)}
                                 </>
                             )}
@@ -168,6 +172,11 @@ const Home = ({ token }) => {
                             Today's PNL
                         </Typography>
                     </div>
+                    <Typography color="white" style={{ textAlign: 'right', display: 'flex', alignItems: 'right' }}>
+                        <>
+                            {todaysPNL >= 0 ? 'Oh you win today!' : 'Some days might not be great, do not worry!'}
+                        </>
+                    </Typography>
                 </CardContent>
             </Card>
         </div>
