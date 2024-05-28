@@ -43,7 +43,10 @@ const Charts = () => {
 
   const fetchTickers = async () => {
     try {
-      const response = await fetch('http://localhost:3001/api/v3/ticker/price');
+      const apiUrl = process.env.REACT_APP_API_URL;
+      const url = `${apiUrl}/api/v3/ticker/price`;
+
+      const response = await fetch(url);
       const data = await response.json();
       setTickers(data);
     } catch (error) {
@@ -59,7 +62,10 @@ const Charts = () => {
     setError(null);
 
     try {
-      const response = await fetch(`http://localhost:3001/api/v3/klines?symbol=${selectedTicker}&interval=${interval}`);
+      const apiUrl = process.env.REACT_APP_API_URL;
+      const url = `${apiUrl}/api/v3/klines?symbol=${selectedTicker}&interval=${interval}`;
+
+      const response = await fetch(url);
       const data = await response.json();
       if (data && Array.isArray(data)) {
         const closePrices = data.map(entry => entry[4]); // Assuming close price is at index 4

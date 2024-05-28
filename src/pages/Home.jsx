@@ -49,7 +49,9 @@ const Home = ({ token }) => {
 
             const symbols = userAssets.map(asset => `${asset.asset_name}USDT`);
             const symbolsQueryParam = encodeURIComponent(JSON.stringify(symbols));
-            const url = `http://localhost:3001/api/v3/ticker/price?symbols=${symbolsQueryParam}`;
+            const apiUrl = process.env.REACT_APP_API_URL;
+            const url = `${apiUrl}/api/v3/ticker/price?symbols=${symbolsQueryParam}`;
+            // const url = `http://localhost:3001/api/v3/ticker/price?symbols=${symbolsQueryParam}`;
             const response = await fetch(url);
             const prices = await response.json();
 
