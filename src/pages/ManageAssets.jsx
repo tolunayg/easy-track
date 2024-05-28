@@ -40,9 +40,9 @@ const ManageAssets = () => {
         redirect: "follow"
       };
   
-      // const apiUrl = process.env.REACT_APP_API_URL;
-      // const url = `${apiUrl}/sapi/v1/margin/allAssets`;
-      const response = await fetch("http://localhost:3001/sapi/v1/margin/allAssets", requestOptions);
+      const apiUrl = process.env.REACT_APP_API_URL;
+      const url = `${apiUrl}/sapi/v1/margin/allAssets`;
+      // const response = await fetch("http://localhost:3001/sapi/v1/margin/allAssets", requestOptions);
 
       // const response = await fetch(url, requestOptions);
       if (!response.ok) {
