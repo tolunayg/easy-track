@@ -3,10 +3,13 @@ import { Card, CardContent, Typography, Snackbar, SnackbarContent, Button } from
 import Skeleton from '@mui/material/Skeleton';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import { DataGrid } from '@mui/x-data-grid';
+import { Line, Pie } from 'react-chartjs-2';
+import { Chart, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, PointElement, LineElement } from 'chart.js';
 import { supabase } from '../utility/client';
 import './Assets.css';
 import ChartDialog from '../components/ChartDialog';
-import { Line } from 'react-chartjs-2';
+
+Chart.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, PointElement, LineElement);
 
 const ManageAssets = ({ token }) => {
   const [assets, setAssets] = useState([]);
@@ -19,16 +22,15 @@ const ManageAssets = ({ token }) => {
   const [assetValues, setAssetValues] = useState([]);
   const [totalValues, setTotalValues] = useState([]);
   const [fullDates, setFullDates] = useState([]);
+  const [pieChartData, setPieChartData] = useState(null);
 
-
-
-
-  // Function to close chart dialog
   const handleCloseChartDialog = () => {
-    setOpenChartDialog(false); // Close chart dialog
+    setOpenChartDialog(false);
   };
 
   useEffect(() => {
+    if (!token || !token.user || !token.user.id) return; // Ensure token and user id are available
+  
     const fetchUserAssets = async () => {
       try {
         const { data, error } = await supabase
@@ -36,11 +38,11 @@ const ManageAssets = ({ token }) => {
           .select('id, asset_name, asset_full_name, quantity')
           .eq('user_id', token.user.id)
           .order('id', { ascending: true });
-
+  
         if (error) {
           throw error;
         }
-
+  
         setAssets(data || []);
       } catch (error) {
         console.error('Error fetching user assets:', error.message);
@@ -48,11 +50,13 @@ const ManageAssets = ({ token }) => {
         setLoading(false);
       }
     };
-
+  
     fetchUserAssets();
-  }, []);
-
+  }, [token]);
+  
   useEffect(() => {
+    if (!token || !token.user || !token.user.id) return; // Ensure token and user id are available
+  
     const fetchTotalAssets = async () => {
       try {
         const totalValues = await fetchTotalAssetValues(token.user.id);
@@ -61,11 +65,9 @@ const ManageAssets = ({ token }) => {
         console.error('Error fetching total asset values:', error.message);
       }
     };
-
+  
     fetchTotalAssets();
-  }, []);
-
-
+  }, [token]);
 
   useEffect(() => {
     const fetchAssetValues = async () => {
@@ -74,7 +76,6 @@ const ManageAssets = ({ token }) => {
         const symbolsQueryParam = encodeURIComponent(`[${symbols.join(',')}]`);
         const apiUrl = process.env.REACT_APP_API_URL;
         const url = `${apiUrl}/api/v3/ticker/price?symbols=${symbolsQueryParam}`;
-        // const url = `http://localhost:3001/api/v3/ticker/price?symbols=${symbolsQueryParam}`;
 
         const response = await fetch(url);
         const data = await response.json();
@@ -95,6 +96,32 @@ const ManageAssets = ({ token }) => {
       setAssetValuesFetched(true);
     }
   }, [assets, assetValuesFetched]);
+
+  useEffect(() => {
+    if (assets.length > 0) {
+      const assetNames = assets.map(asset => asset.asset_name);
+      const assetValues = assets.map(asset => parseFloat(asset.value));
+
+      const pieData = {
+        labels: assetNames,
+        datasets: [
+          {
+            data: assetValues,
+            backgroundColor: [
+              '#FF6384',
+              '#36A2EB',
+              '#FFCE56',
+              '#4BC0C0',
+              '#9966FF',
+              '#FF9F40',
+            ],
+          },
+        ],
+      };
+
+      setPieChartData(pieData);
+    }
+  }, [assets]);
 
   const handleCloseSnackbar = (event, reason) => {
     if (reason === 'clickaway') {
@@ -127,7 +154,55 @@ const ManageAssets = ({ token }) => {
         throw error;
       }
 
-      return data || [];
+      const adjustedData = data.map(item => {
+        const utcDate = new Date(item.created_at);
+        const localDate = new Date(utcDate.getTime() + (utcDate.getTimezoneOffset() * 60000));
+        const dateString = localDate.toISOString().split('T')[0]; // Format as YYYY-MM-DD
+
+        return {
+          ...item,
+          created_at: dateString
+        };
+      });
+
+      // Fetch current asset value from your API
+      const symbolsQueryParam = encodeURIComponent(JSON.stringify([`${assetName}USDT`]));
+      const apiUrl = process.env.REACT_APP_API_URL;
+      const url = `${apiUrl}/api/v3/ticker/price?symbols=${symbolsQueryParam}`;
+      const response = await fetch(url);
+      const prices = await response.json();
+      const currentPrice = prices.find(item => item.symbol === `${assetName}USDT`).price;
+
+      // Fetch the user's current asset quantity from Supabase
+      const { data: userAssets, error: userAssetsError } = await supabase
+        .from('user_assets')
+        .select('quantity')
+        .eq('user_id', userId)
+        .eq('asset_name', assetName);
+
+      if (userAssetsError) {
+        throw userAssetsError;
+      }
+
+      const assetQuantity = userAssets[0]?.quantity || 0;
+
+      // Calculate the total value for today
+      const assetQuantityValue = currentPrice * assetQuantity;
+      const today = new Date().toISOString().split('T')[0];
+
+      const todayData = {
+        id: 'new', // Temporary id for the new data
+        created_at: today,
+        user_id: userId,
+        asset_name: assetName,
+        asset_quantity_value: assetQuantityValue
+      };
+
+      adjustedData.push(todayData);
+
+      console.log('adjustedData', adjustedData);
+
+      return adjustedData || [];
     } catch (error) {
       console.error('Error fetching asset values from the database:', error.message);
       return [];
@@ -138,15 +213,14 @@ const ManageAssets = ({ token }) => {
     try {
       // Fetch current asset values from your API (placeholder for now)
       const currentAssetValues = [
-        { asset_name: 'BTC', value: 69449 }, // Example data
-        { asset_name: 'ETH', value: 3892 },   // Example data
+        { asset_name: 'BTC', value: 80000 }, // Example data
+        { asset_name: 'ETH', value: 6000 },   // Example data
         // Add more assets as needed
       ];
 
       // Get the current date and time (manually set for now)
       // const currentDate = new Date(); // Set the date manually if needed
-      const currentDate = new Date(2024, 4, 29);
-
+      const currentDate = new Date(2024, 4, 31);
 
       // Loop through the user's assets and insert values into the database
       await Promise.all(
@@ -162,7 +236,7 @@ const ManageAssets = ({ token }) => {
                 user_id: token.user.id, // Replace with the actual user ID
                 asset_name,
                 asset_quantity_value,
-                created_at: currentDate, // Set the date manually
+                created_at: new Date(currentDate.toISOString()), // Set the date manually
               },
             ]);
           } else {
@@ -190,17 +264,58 @@ const ManageAssets = ({ token }) => {
       }
 
       const aggregatedValues = data.reduce((acc, { created_at, asset_name, asset_quantity_value }) => {
-        const date = new Date(created_at).toLocaleDateString();
-        if (!acc[date]) {
-          acc[date] = {
+        const utcDate = new Date(created_at);
+        const localDate = new Date(utcDate.getTime() + (utcDate.getTimezoneOffset() * 60000));
+        const dateString = localDate.toISOString().split('T')[0]; // Format as YYYY-MM-DD
+
+        if (!acc[dateString]) {
+          acc[dateString] = {
             total_value: 0,
             details: {}
           };
         }
-        acc[date].total_value += asset_quantity_value;
-        acc[date].details[asset_name] = (acc[date].details[asset_name] || 0) + asset_quantity_value;
+        acc[dateString].total_value += asset_quantity_value;
+        acc[dateString].details[asset_name] = (acc[dateString].details[asset_name] || 0) + asset_quantity_value;
         return acc;
       }, {});
+
+      // Fetch the current asset values from your API
+      const userAssetsResponse = await supabase
+        .from('user_assets')
+        .select('asset_name, quantity')
+        .eq('user_id', userId);
+
+      if (userAssetsResponse.error) {
+        throw userAssetsResponse.error;
+      }
+
+      const userAssets = userAssetsResponse.data;
+
+      const symbols = userAssets.map(asset => `${asset.asset_name}USDT`);
+      const symbolsQueryParam = encodeURIComponent(JSON.stringify(symbols));
+      const apiUrl = process.env.REACT_APP_API_URL;
+      const url = `${apiUrl}/api/v3/ticker/price?symbols=${symbolsQueryParam}`;
+      const response = await fetch(url);
+      const prices = await response.json();
+
+      // Calculate the total value for today
+      let totalValueToday = 0;
+      const detailsToday = {};
+
+      userAssets.forEach(asset => {
+        const price = prices.find(item => item.symbol === `${asset.asset_name}USDT`);
+        if (price) {
+          const assetValue = price.price * asset.quantity;
+          totalValueToday += assetValue;
+          detailsToday[asset.asset_name] = assetValue;
+        }
+      });
+
+      const today = new Date().toISOString().split('T')[0];
+      aggregatedValues[today] = {
+        total_value: totalValueToday,
+        details: detailsToday
+      };
 
       const totalValues = Object.keys(aggregatedValues).map(date => ({
         date,
@@ -253,25 +368,24 @@ const ManageAssets = ({ token }) => {
     },
   };
 
-
   const columns = [
     { field: 'asset_name', headerName: 'Asset Name', flex: 1 },
     { field: 'quantity', headerName: 'Asset Amount', flex: 1, align: 'right' },
-    { 
-    field: 'value', 
-    headerName: 'Value', 
-    flex: 1, 
-    align: 'right', 
-    renderCell: (params) => (
-      <div style={{ textAlign: 'right' }}>
-        ${params.value}
-      </div>
-    ),
-  },
+    {
+      field: 'value',
+      headerName: 'Value',
+      flex: 1,
+      align: 'right',
+      renderCell: (params) => (
+        <div style={{ textAlign: 'right' }}>
+          ${params.value}
+        </div>
+      ),
+    },
     {
       field: 'chart',
       headerName: 'Chart',
-      flex: 1, // Adjust the flex according to your preference
+      flex: 1,
       renderCell: (params) => (
         <Button
           variant="contained"
@@ -306,6 +420,31 @@ const ManageAssets = ({ token }) => {
         <Skeleton variant="rounded" width="100%" animation="wave" height={400} />
       )}
 
+      {pieChartData && (
+        <div style={{ marginTop: '20px', width: '400px', height: '400px' }}>
+          <Pie
+            data={pieChartData}
+            options={{
+              plugins: {
+                legend: {
+                  display: true,
+                  position: 'right',
+                },
+                tooltip: {
+                  callbacks: {
+                    label: function(tooltipItem) {
+                      let label = tooltipItem.label || '';
+                      let value = tooltipItem.raw || 0;
+                      return `${label}: $${value.toFixed(2)}`;
+                    }
+                  }
+                }
+              }
+            }}
+          />
+        </div>
+      )}
+
       {loading ? (
         <>
           <Skeleton variant="rounded" width="100%" animation="wave" height={74} />
@@ -317,7 +456,6 @@ const ManageAssets = ({ token }) => {
             columns={columns}
             pageSize={5}
             className="custom-data-grid"
-            
           />
         </div>
       )}
