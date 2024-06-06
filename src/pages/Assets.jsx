@@ -3,7 +3,7 @@ import { Card, CardContent, Typography, Snackbar, SnackbarContent, Button } from
 import Skeleton from '@mui/material/Skeleton';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import { DataGrid } from '@mui/x-data-grid';
-import { Line, Pie } from 'react-chartjs-2';
+import { Line, Pie, Doughnut  } from 'react-chartjs-2';
 import { Chart, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, PointElement, LineElement } from 'chart.js';
 import { supabase } from '../utility/client';
 import './Assets.css';
@@ -213,14 +213,15 @@ const ManageAssets = ({ token }) => {
     try {
       // Fetch current asset values from your API (placeholder for now)
       const currentAssetValues = [
-        { asset_name: 'BTC', value: 80000 }, // Example data
-        { asset_name: 'ETH', value: 6000 },   // Example data
+        { asset_name: 'BTC', value: 71104 }, // Example data
+        { asset_name: 'ETH', value: 3866 },   // Example data
+        { asset_name: 'BNB', value: 698 },   // Example data
         // Add more assets as needed
       ];
 
       // Get the current date and time (manually set for now)
       // const currentDate = new Date(); // Set the date manually if needed
-      const currentDate = new Date(2024, 4, 31);
+      const currentDate = new Date(2024, 5, 6);
 
       // Loop through the user's assets and insert values into the database
       await Promise.all(
@@ -421,29 +422,33 @@ const ManageAssets = ({ token }) => {
       )}
 
       {pieChartData && (
-        <div style={{ marginTop: '20px', width: '400px', height: '400px' }}>
-          <Pie
-            data={pieChartData}
-            options={{
-              plugins: {
-                legend: {
-                  display: true,
-                  position: 'right',
-                },
-                tooltip: {
-                  callbacks: {
-                    label: function(tooltipItem) {
-                      let label = tooltipItem.label || '';
-                      let value = tooltipItem.raw || 0;
-                      return `${label}: $${value.toFixed(2)}`;
+            <div style={{ display: 'flex', justifyContent: 'center', marginTop: '20px', marginBottom: '20px' }}>
+              <div style={{ width: '400px', height: '400px' }}>
+                <Doughnut
+                  data={pieChartData}
+                  options={{
+                    cutout: '50%', // This sets the inner radius to 50% of the outer radius
+                    plugins: {
+                      legend: {
+                        display: true,
+                        position: 'right',
+                      },
+                      tooltip: {
+                        callbacks: {
+                          label: function(tooltipItem) {
+                            let label = tooltipItem.label || '';
+                            let value = tooltipItem.raw || 0;
+                            return `${label}: $${value.toFixed(2)}`;
+                          }
+                        }
+                      }
                     }
-                  }
-                }
-              }
-            }}
-          />
-        </div>
-      )}
+                  }}
+                />
+              </div>
+            </div>
+          )}
+
 
       {loading ? (
         <>
