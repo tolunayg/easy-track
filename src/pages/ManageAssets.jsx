@@ -7,7 +7,7 @@ import { supabase } from '../utility/client';
 import axios from 'axios';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'; // Importing success icon
 
-const ManageAssets = ( {{ token }} ) => {
+const ManageAssets = ( { token } ) => {
   const [assets, setAssets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
