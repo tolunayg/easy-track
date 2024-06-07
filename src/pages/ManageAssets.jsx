@@ -60,6 +60,8 @@ const ManageAssets = ( { token } ) => {
 
     if (!token || !token.user || !token.user.id) return; // Ensure token and user id are available
   
+    const userId = token.user.id;
+
     const fetchUserAssets = async () => {
       try {
         const { data, error } = await supabase
