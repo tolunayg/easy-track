@@ -153,11 +153,10 @@ const ManageAssets = ( { token } ) => {
   };
 
   const handleSaveAssets = async () => {
-
     if (!token || !token.user || !token.user.id) return; // Ensure token and user id are available
-
+  
     const userId = token.user.id;
-
+  
     try {
       // Prepare data for upsert
       const dataToUpsert = assets.map((asset) => ({
@@ -171,7 +170,7 @@ const ManageAssets = ( { token } ) => {
       // Perform upsert operation
       const { data: upsertedData, error: upsertError } = await supabase
         .from('user_assets')
-        .upsert(dataToUpsert)
+        .upsert(dataToUpsert, { onConflict: ['id'] }) // Use 'id' for conflict resolution
         .select();
   
       if (upsertError) {
@@ -180,11 +179,12 @@ const ManageAssets = ( { token } ) => {
   
       console.log('Upsert successful:', upsertedData);
   
-      // Fetch existing asset IDs from the database
+      // Fetch all existing assets for the user from the database
       const { data: existingAssets, error: fetchError } = await supabase
         .from('user_assets')
-        .select('id')
+        .select('id, asset_name, asset_full_name, quantity')
         .eq('user_id', userId);
+  
       if (fetchError) {
         throw fetchError;
       }
@@ -196,17 +196,19 @@ const ManageAssets = ( { token } ) => {
       const idsToDelete = existingIds.filter((id) => !assets.some((asset) => asset.id === id));
   
       // Delete the assets that are no longer in the current array
-      const { data: deletedData, error: deletionError } = await supabase
-        .from('user_assets')
-        .delete()
-        .in('id', idsToDelete)
-        .eq('user_id', userId);
-
-      if (deletionError) {
-        throw deletionError;
+      if (idsToDelete.length > 0) {
+        const { data: deletedData, error: deletionError } = await supabase
+          .from('user_assets')
+          .delete()
+          .in('id', idsToDelete);
+  
+        if (deletionError) {
+          throw deletionError;
+        }
+  
+        console.log('Deletion successful:', deletedData);
       }
   
-      console.log('Deletion successful:', deletedData);
       setSnackbarOpen(true); // Open Snackbar
     } catch (error) {
       console.error('Error saving assets:', error.message);
