@@ -36,7 +36,7 @@ const AppRouter = () => {
                 <Route path="/home" element={ <MainLayout component={() => <Home token={token} />} /> } />
                 
                 <Route path="/about" element={ <MainLayout component={About} />} />
-                <Route path="/manage_assets" element={ <MainLayout component={ManageAssets} />} />
+                <Route path="/manage_assets" element={ <MainLayout component={() => <ManageAssets token={token} />} />} />
                 <Route path="/assets" element={ <MainLayout component={() => <Assets token={token} />} />} />
                 <Route path="/charts" element={ <MainLayout component={Charts} />} />
 

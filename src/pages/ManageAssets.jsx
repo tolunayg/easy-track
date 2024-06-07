@@ -7,7 +7,7 @@ import { supabase } from '../utility/client';
 import axios from 'axios';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'; // Importing success icon
 
-const ManageAssets = () => {
+const ManageAssets = ( {{ token }} ) => {
   const [assets, setAssets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
@@ -57,11 +57,15 @@ const ManageAssets = () => {
   };
 
   useEffect(() => {
+
+    if (!token || !token.user || !token.user.id) return; // Ensure token and user id are available
+  
     const fetchUserAssets = async () => {
       try {
         const { data, error } = await supabase
           .from('user_assets')
           .select('id, asset_name, asset_full_name, quantity')
+          .eq('user_id', userId)
           .order('id', { ascending: true });
 
         if (error) {
@@ -77,7 +81,7 @@ const ManageAssets = () => {
     };
 
     fetchUserAssets();
-  }, []);
+  }, [token]);
 
   const handleOpen = () => {
     setOpen(true);
@@ -147,13 +151,19 @@ const ManageAssets = () => {
   };
 
   const handleSaveAssets = async () => {
+
+    if (!token || !token.user || !token.user.id) return; // Ensure token and user id are available
+
+    const userId = token.user.id;
+
     try {
       // Prepare data for upsert
       const dataToUpsert = assets.map((asset) => ({
         id: asset.id,
         asset_name: asset.asset_name,
         asset_full_name: asset.asset_full_name,
-        quantity: asset.quantity
+        quantity: asset.quantity,
+        user_id: userId
       }));
   
       // Perform upsert operation
@@ -171,8 +181,8 @@ const ManageAssets = () => {
       // Fetch existing asset IDs from the database
       const { data: existingAssets, error: fetchError } = await supabase
         .from('user_assets')
-        .select('id');
-  
+        .select('id')
+        .eq('user_id', userId);
       if (fetchError) {
         throw fetchError;
       }
@@ -187,8 +197,9 @@ const ManageAssets = () => {
       const { data: deletedData, error: deletionError } = await supabase
         .from('user_assets')
         .delete()
-        .in('id', idsToDelete);
-  
+        .in('id', idsToDelete)
+        .eq('user_id', userId);
+
       if (deletionError) {
         throw deletionError;
       }
