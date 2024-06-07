@@ -12,10 +12,17 @@ import AccountCircle from '@mui/icons-material/AccountCircle';
 import MenuIcon from '@mui/icons-material/Menu';
 import HomeIcon from '@mui/icons-material/Home';
 import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
+import CurrencyBitcoinIcon from '@mui/icons-material/CurrencyBitcoin';
+import WalletIcon from '@mui/icons-material/Wallet';
+import QueryStatsIcon from '@mui/icons-material/QueryStats';
 import InfoIcon from '@mui/icons-material/Info';
+import MoodIcon from '@mui/icons-material/Mood';
+import EmojiEmotionsIcon from '@mui/icons-material/EmojiEmotions';
 import { Link } from 'react-router-dom';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
+import { Box } from '@mui/material';
+
 import './MainLayout.css';
 
 const drawerWidth = 240;
@@ -71,9 +78,14 @@ const MainLayout = ({ component: Component }) => {
             <MenuIcon />
           </IconButton>
           ) : null}
-          <Typography variant="h6" noWrap>
-            Easy Track
-          </Typography>
+          <Box display="flex" alignItems="center">
+            <Link to="/home" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none', color: 'inherit' }}>
+                <EmojiEmotionsIcon style={{ color: 'white', marginRight: '8px' }} />
+                <Typography variant="h6" noWrap>
+                    Easy Track
+                </Typography>
+            </Link>
+        </Box>
           <div>
             <IconButton
               size="large"
@@ -119,12 +131,6 @@ const MainLayout = ({ component: Component }) => {
         >
           <Toolbar />
           <List>
-            <ListItem button component={Link} to="/">
-              <ListItemIcon>
-                <HomeIcon style={{ color: 'white' }} />
-              </ListItemIcon>
-              <ListItemText primary="Welcome Page" />
-            </ListItem>
             <ListItem button component={Link} to="/home">
               <ListItemIcon>
                 <HomeIcon style={{ color: 'white' }} />
@@ -134,23 +140,29 @@ const MainLayout = ({ component: Component }) => {
             <hr style={{ borderColor: 'grey' }} />
             <ListItem button component={Link} to="/manage_assets">
               <ListItemIcon>
-                <AccountBalanceIcon style={{ color: 'white' }} />
+                <CurrencyBitcoinIcon style={{ color: 'white' }} />
               </ListItemIcon>
               <ListItemText primary="Manage Assets" />
             </ListItem>
             <ListItem button component={Link} to="/assets">
               <ListItemIcon>
-                <AccountBalanceIcon style={{ color: 'white' }} />
+                <WalletIcon style={{ color: 'white' }} />
               </ListItemIcon>
               <ListItemText primary="Assets" />
             </ListItem>
             <ListItem button component={Link} to="/charts">
               <ListItemIcon>
-                <AccountBalanceIcon style={{ color: 'white' }} />
+                <QueryStatsIcon style={{ color: 'white' }} />
               </ListItemIcon>
               <ListItemText primary="Charts" />
             </ListItem>
             <hr style={{ borderColor: 'grey' }} />
+            <ListItem button component={Link} to="/">
+              <ListItemIcon>
+                <HomeIcon style={{ color: 'white' }} />
+              </ListItemIcon>
+              <ListItemText primary="Welcome Page" />
+            </ListItem>
             <ListItem button component={Link} to="/about">
               <ListItemIcon>
                 <InfoIcon style={{ color: 'white' }} />
