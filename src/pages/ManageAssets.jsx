@@ -66,7 +66,7 @@ const ManageAssets = ( { token } ) => {
       try {
         const { data, error } = await supabase
           .from('user_assets')
-          .select('id, asset_name, asset_full_name, quantity')
+          .select('id, asset_name, asset_full_name, quantity, user_id')
           .eq('user_id', userId)
           .order('id', { ascending: true });
 
@@ -182,7 +182,7 @@ const ManageAssets = ( { token } ) => {
       // Fetch all existing assets for the user from the database
       const { data: existingAssets, error: fetchError } = await supabase
         .from('user_assets')
-        .select('id, asset_name, asset_full_name, quantity')
+        .select('id, asset_name, asset_full_name, quantity, user_id')
         .eq('user_id', userId);
   
       if (fetchError) {
