@@ -4,10 +4,9 @@ import Autocomplete from '@mui/material/Autocomplete';
 import Skeleton from '@mui/material/Skeleton';
 import './ManageAssets.css';
 import { supabase } from '../utility/client';
-import axios from 'axios';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle'; // Importing success icon
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 
-const ManageAssets = ( { token } ) => {
+const ManageAssets = ({ token }) => {
   const [assets, setAssets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
@@ -16,10 +15,8 @@ const ManageAssets = ( { token } ) => {
   const [assetName, setAssetName] = useState('');
   const [assetFullName, setAssetFullName] = useState('');
   const [assetQuantity, setAssetQuantity] = useState('');
-  const [assetOptions, setAssetOptions] = useState([]);
   const [assetData, setAssetData] = useState([]);
-  const [snackbarOpen, setSnackbarOpen] = useState(false); // State for Snackbar
-
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
 
   const apiKey = process.env.REACT_APP_BINANCE_API_KEY;
 
@@ -33,13 +30,13 @@ const ManageAssets = ( { token } ) => {
       myHeaders.append("Content-Type", "application/json");
       myHeaders.append("X-MBX-APIKEY", apiKey);
       myHeaders.append("redirect", "follow");
-  
+
       const requestOptions = {
         method: "GET",
         headers: myHeaders,
         redirect: "follow"
       };
-  
+
       const apiUrl = process.env.REACT_APP_API_URL;
       const url = `${apiUrl}/sapi/v1/margin/allAssets`;
       const response = await fetch(url, requestOptions);
@@ -57,9 +54,8 @@ const ManageAssets = ( { token } ) => {
   };
 
   useEffect(() => {
+    if (!token || !token.user || !token.user.id) return;
 
-    if (!token || !token.user || !token.user.id) return; // Ensure token and user id are available
-  
     const userId = token.user.id;
 
     const fetchUserAssets = async () => {
@@ -103,14 +99,25 @@ const ManageAssets = ( { token } ) => {
 
   const handleAddAsset = () => {
     if (selectedAsset) {
-      const newAsset = {
-        id: assets.length + 1,
-        asset_name: selectedAsset.assetName,
-        asset_full_name: selectedAsset.assetFullName,
-        quantity: parseFloat(assetQuantity),
-        editable: false
-      };
-      setAssets([...assets, newAsset]);
+      const existingAssetIndex = assets.findIndex(asset => asset.asset_name === selectedAsset.assetName);
+
+      if (existingAssetIndex !== -1) {
+        // If asset already exists, update the quantity
+        const updatedAssets = [...assets];
+        updatedAssets[existingAssetIndex].quantity += parseFloat(assetQuantity);
+        setAssets(updatedAssets);
+      } else {
+        // If asset doesn't exist, add new asset
+        const newAsset = {
+          id: assets.length + 1,
+          asset_name: selectedAsset.assetName,
+          asset_full_name: selectedAsset.assetFullName,
+          quantity: parseFloat(assetQuantity),
+          editable: false
+        };
+        setAssets([...assets, newAsset]);
+      }
+      
       setSelectedAsset(null);
       setAssetQuantity('');
       handleClose();
@@ -119,21 +126,31 @@ const ManageAssets = ( { token } ) => {
 
   const handleAddCustomAsset = () => {
     if (assetName && assetFullName && assetQuantity) {
-      const newAsset = {
-        id: assets.length + 1,
-        asset_name: assetName,
-        asset_full_name: assetFullName,
-        quantity: parseFloat(assetQuantity),
-        editable: false
-      };
-      setAssets([...assets, newAsset]);
+      const existingAssetIndex = assets.findIndex(asset => asset.asset_name === assetName);
+
+      if (existingAssetIndex !== -1) {
+        // If asset already exists, update the quantity
+        const updatedAssets = [...assets];
+        updatedAssets[existingAssetIndex].quantity += parseFloat(assetQuantity);
+        setAssets(updatedAssets);
+      } else {
+        // If asset doesn't exist, add new asset
+        const newAsset = {
+          id: assets.length + 1,
+          asset_name: assetName,
+          asset_full_name: assetFullName,
+          quantity: parseFloat(assetQuantity),
+          editable: false
+        };
+        setAssets([...assets, newAsset]);
+      }
+
       setAssetName('');
       setAssetFullName('');
       setAssetQuantity('');
       handleCloseCustom();
     }
   };
-
 
   const handleUpdateAsset = (index) => {
     const updatedAssets = [...assets];
@@ -153,10 +170,10 @@ const ManageAssets = ( { token } ) => {
   };
 
   const handleSaveAssets = async () => {
-    if (!token || !token.user || !token.user.id) return; // Ensure token and user id are available
-  
+    if (!token || !token.user || !token.user.id) return;
+
     const userId = token.user.id;
-  
+
     try {
       // Prepare data for upsert
       const dataToUpsert = assets.map((asset) => ({
@@ -166,49 +183,49 @@ const ManageAssets = ( { token } ) => {
         quantity: asset.quantity,
         user_id: userId
       }));
-  
+
       // Perform upsert operation
       const { data: upsertedData, error: upsertError } = await supabase
         .from('user_assets')
-        .upsert(dataToUpsert, { onConflict: ['id'] }) // Use 'id' for conflict resolution
+        .upsert(dataToUpsert, { onConflict: ['id', 'user_id', 'asset_name'] }) // Ensure unique constraints
         .select();
-  
+
       if (upsertError) {
         throw upsertError;
       }
-  
+
       console.log('Upsert successful:', upsertedData);
-  
+
       // Fetch all existing assets for the user from the database
       const { data: existingAssets, error: fetchError } = await supabase
         .from('user_assets')
         .select('id, asset_name, asset_full_name, quantity, user_id')
         .eq('user_id', userId);
-  
+
       if (fetchError) {
         throw fetchError;
       }
-  
+
       // Extract IDs from existing assets
       const existingIds = existingAssets.map((asset) => asset.id);
-  
+
       // Find IDs of assets that need to be deleted
       const idsToDelete = existingIds.filter((id) => !assets.some((asset) => asset.id === id));
-  
+
       // Delete the assets that are no longer in the current array
       if (idsToDelete.length > 0) {
         const { data: deletedData, error: deletionError } = await supabase
           .from('user_assets')
           .delete()
           .in('id', idsToDelete);
-  
+
         if (deletionError) {
           throw deletionError;
         }
-  
+
         console.log('Deletion successful:', deletedData);
       }
-  
+
       setSnackbarOpen(true); // Open Snackbar
     } catch (error) {
       console.error('Error saving assets:', error.message);
@@ -272,9 +289,9 @@ const ManageAssets = ( { token } ) => {
         ))
       )}
 
-    <Button color="secondary" variant="outlined" onClick={handleOpenCustom} style={{ color: '#ce93d8',  marginRight: '10px' }}>Add New Custom Asset</Button>
-    <Button color="primary" variant="contained" onClick={handleOpen} style={{ marginRight: '10px' }}>Add New Asset</Button>
-    <Button color="success" variant="contained" onClick={handleSaveAssets}>Save</Button>
+      <Button color="secondary" variant="outlined" onClick={handleOpenCustom} style={{ color: '#ce93d8', marginRight: '10px' }}>Add New Custom Asset</Button>
+      <Button color="primary" variant="contained" onClick={handleOpen} style={{ marginRight: '10px' }}>Add New Asset</Button>
+      <Button color="success" variant="contained" onClick={handleSaveAssets}>Save</Button>
 
       {/* Add custom asset section */}
       <Dialog open={openCustom} onClose={handleCloseCustom}>
@@ -309,8 +326,6 @@ const ManageAssets = ( { token } ) => {
       </Dialog>
       {/* End of custom asset section */}
 
-
-
       <Dialog open={open} onClose={handleClose}>
         <DialogTitle>Add New Asset</DialogTitle>
         <DialogContent>
@@ -334,7 +349,7 @@ const ManageAssets = ( { token } ) => {
           <Button onClick={handleAddAsset}>Add</Button>
         </DialogActions>
       </Dialog>
-      
+
       <Snackbar
         open={snackbarOpen}
         autoHideDuration={5000}
@@ -357,6 +372,5 @@ const ManageAssets = ( { token } ) => {
     </div>
   );
 };
-
 
 export default ManageAssets;
